@@ -1,6 +1,6 @@
-from microdot_asyncio import Microdot, Response, send_file
-from microdot_utemplate import render_template
-from microdot_asyncio_websocket import with_websocket
+from microdot import Microdot, Response, send_file
+from microdot.utemplate import Template
+from microdot.websocket import with_websocket
 from ldr_photoresistor_module import LDR
 import time
 
@@ -14,7 +14,7 @@ ldr = LDR(27)
 # root route
 @app.route('/')
 async def index(request):
-    return render_template('index.html')
+    return Template('index.html').render()
 
 
 @app.route('/ws')
@@ -23,7 +23,10 @@ async def read_sensor(request, ws):
     while True:
 #         data = await ws.receive()
         time.sleep(.1)
-        await ws.send(str(ldr.get_light_percentage()))
+        try:
+            await ws.send(str(ldr.get_light_percentage()))
+        except ConnectionResetError:
+            print("connection lost")
 
 # Static CSS/JSS
 @app.route("/static/<path:path>")
